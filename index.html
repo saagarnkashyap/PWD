@@ -36,6 +36,207 @@
       width: auto;
       margin-left: 10px;
     }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Password Manager</h1>
+
+  <div id="auth">
+    <h2>Login</h2>
+    <input type="text" id="loginName" placeholder="Enter your name" />
+    <input type="password" id="masterPasswordInput" placeholder="Enter password" />
+    <button onclick="login()">Login</button>
+    <p>Don't have an account? <a href="#" onclick="showCreateAccount()">Create New Account</a></p>
+  </div>
+
+  <div id="create-account" class="hidden">
+    <h2>Create Account</h2>
+    <input type="text" id="newName" placeholder="Enter your name" />
+    <input type="password" id="newPassword" placeholder="Enter password" />
+    <input type="password" id="confirmPassword" placeholder="Confirm password" />
+    <button onclick="createAccount()">Create Account</button>
+    <p>Already have an account? <a href="#" onclick="showLogin()">Back to Login</a></p>
+  </div>
+
+  <div id="app" style="display: none;">
+    <h2 id="welcome"></h2>
+    <h3>Add New Entry</h3>
+    <input type="text" id="website" placeholder="Website" />
+    <input type="text" id="username" placeholder="Username" />
+    <div style="position: relative;">
+      <input type="password" id="password" placeholder="Password" />
+      <button class="password-toggle" onclick="togglePasswordVisibility('password')">Show/Hide Password</button>
+    </div>
+    <button onclick="addEntry()">Add Entry</button>
+
+    <h3>Saved Entries</h3>
+    <div id="entries"></div>
+  </div>
+
+  <script>
+    function showCreateAccount() {
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("create-account").classList.remove("hidden");
+    }
+
+    function showLogin() {
+      document.getElementById("auth").style.display = "block";
+      document.getElementById("create-account").classList.add("hidden");
+    }
+
+    function createAccount() {
+      const name = document.getElementById("newName").value.trim();
+      const pass = document.getElementById("newPassword").value;
+      const confirm = document.getElementById("confirmPassword").value;
+
+      if (!name || !pass || !confirm) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      if (pass !== confirm) {
+        alert("Passwords do not match.");
+        return;
+      }
+
+      localStorage.setItem("masterPassword", pass);
+      localStorage.setItem("accountName", name);
+      alert("Account created successfully.");
+      showLogin();
+    }
+
+    function login() {
+      const input = document.getElementById("masterPasswordInput").value;
+      const name = document.getElementById("loginName").value.trim();
+      const savedName = localStorage.getItem("accountName");
+      const savedPass = localStorage.getItem("masterPassword");
+
+      if (name === savedName && input === savedPass) {
+        showApp(name);
+      } else {
+        alert("Incorrect name or password.");
+      }
+    }
+
+    function showApp(userName) {
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("create-account").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      document.getElementById("welcome").innerText = `Welcome, ${userName}`;
+      loadEntries();
+    }
+
+    function togglePasswordVisibility(inputId) {
+      const input = document.getElementById(inputId);
+      input.type = input.type === "password" ? "text" : "password";
+    }
+
+    function addEntry() {
+      const website = document.getElementById("website").value;
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      if (!website || !username || !password) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      const entry = { website, username, password };
+      const existing = JSON.parse(localStorage.getItem("passwords") || "[]");
+      existing.push(entry);
+      localStorage.setItem("passwords", JSON.stringify(existing));
+      loadEntries();
+
+      document.getElementById("website").value = "";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
+
+    function loadEntries() {
+      const container = document.getElementById("entries");
+      container.innerHTML = "";
+      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
+
+      entries.forEach((entry, index) => {
+        const div = document.createElement("div");
+        div.className = "entry";
+
+        const passwordId = `entry-password-${index}`;
+
+        div.innerHTML = `
+          <strong>${entry.website}</strong><br />
+          Username: ${entry.username}<br />
+          <input type="password" id="${passwordId}" value="${entry.password}" readonly style="width: 100%;" />
+          <button class="inline-btn password-toggle" onclick="togglePasswordVisibility('${passwordId}')">Show/Hide</button>
+          <button class="inline-btn" onclick="deleteEntry(${index})">Delete</button>
+        `;
+
+        container.appendChild(div);
+      });
+    }
+
+    function deleteEntry(index) {
+      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
+      entries.splice(index, 1);
+      localStorage.setItem("passwords", JSON.stringify(entries));
+      loadEntries();
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Password Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #f0f0f0;
+      max-width: 600px;
+      margin: 30px auto;
+    }
+    input, button {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+    }
+    .entry {
+      border: 1px solid #444;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      background-color: #222;
+    }
+    .password-toggle {
+      margin-top: 5px;
+      background-color: #333;
+      color: white;
+      cursor: pointer;
+    }
+    .inline-btn {
+      display: inline-block;
+      width: auto;
+      margin-left: 10px;
+    }
   </style>
 </head>
 <body>
@@ -150,3 +351,4 @@
   </script>
 </body>
 </html>
+ -->
