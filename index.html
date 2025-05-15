@@ -9,6 +9,221 @@
 
     body {
       font-family: 'VT323', monospace;
+      background-color: #ffffff;
+      color: #1e1e1e;
+      padding: 30px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3 {
+      border-bottom: 1px dashed #000000;
+      padding-bottom: 5px;
+    }
+
+    input, button {
+      font-family: 'VT323', monospace;
+      font-size: 20px;
+      background-color: #fff;
+      color: #1e1e1e;
+      border: 1px solid #000000;
+      padding: 8px;
+      margin: 10px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button:hover {
+      background-color: #000000;
+      color: #ffffff;
+    }
+
+    .entry {
+      border: 1px dashed #000000;
+      padding: 10px;
+      margin: 10px 0;
+      background-color: #f9f9f9;
+    }
+
+    .inline-btn {
+      display: inline-block;
+      width: auto;
+      margin-left: 5px;
+      font-size: 16px;
+      padding: 4px 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔐 My Retro Password Log</h1>
+
+  <div id="setup" style="display: none;">
+    <h2>Create Your Account</h2>
+    <input type="text" id="username" placeholder="Your name" />
+    <input type="password" id="newPassword" placeholder="Create a password" />
+    <input type="password" id="confirmPassword" placeholder="Confirm password" />
+    <button onclick="createAccount()">Set Password</button>
+  </div>
+
+  <div id="login" style="display: none;">
+    <h2>Login</h2>
+    <input type="password" id="loginPassword" placeholder="Enter your password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="app" style="display: none;">
+    <h2 id="greeting"></h2>
+
+    <h3>Add New Entry</h3>
+    <input type="text" id="website" placeholder="Website" />
+    <input type="text" id="entryUsername" placeholder="Username" />
+    <div>
+      <input type="password" id="password" placeholder="Password" />
+      <button class="inline-btn" onclick="togglePasswordVisibility('password')">👁 Show/Hide</button>
+    </div>
+    <button onclick="addEntry()">💾 Save Entry</button>
+
+    <h3>Saved Entries</h3>
+    <div id="entries"></div>
+
+    <button onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <script>
+    const storedPass = localStorage.getItem("masterPassword");
+    const storedName = localStorage.getItem("username");
+
+    if (!storedPass) {
+      document.getElementById("setup").style.display = "block";
+    } else if (sessionStorage.getItem("loggedIn")) {
+      showApp();
+    } else {
+      document.getElementById("login").style.display = "block";
+    }
+
+    function createAccount() {
+      const name = document.getElementById("username").value;
+      const pass = document.getElementById("newPassword").value;
+      const confirm = document.getElementById("confirmPassword").value;
+
+      if (!name || !pass || pass !== confirm) {
+        alert("Please fill all fields and ensure passwords match.");
+        return;
+      }
+
+      localStorage.setItem("username", name);
+      localStorage.setItem("masterPassword", pass);
+      sessionStorage.setItem("loggedIn", true);
+      showApp();
+    }
+
+    function login() {
+      const input = document.getElementById("loginPassword").value;
+      if (input === localStorage.getItem("masterPassword")) {
+        sessionStorage.setItem("loggedIn", true);
+        showApp();
+      } else {
+        alert("Wrong password.");
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem("loggedIn");
+      location.reload();
+    }
+
+    function showApp() {
+      const user = localStorage.getItem("username") || "User";
+      document.getElementById("setup").style.display = "none";
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      document.getElementById("greeting").innerText = `Welcome ${user}, hope you're having a good day :)`;
+      loadEntries();
+    }
+
+    function togglePasswordVisibility(id) {
+      const input = document.getElementById(id);
+      input.type = input.type === "password" ? "text" : "password";
+    }
+
+    function addEntry() {
+      const website = document.getElementById("website").value;
+      const username = document.getElementById("entryUsername").value;
+      const password = document.getElementById("password").value;
+
+      if (!website || !username || !password) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      const entry = { website, username, password };
+      const existing = JSON.parse(localStorage.getItem("passwords") || "[]");
+      existing.push(entry);
+      localStorage.setItem("passwords", JSON.stringify(existing));
+      loadEntries();
+
+      document.getElementById("website").value = "";
+      document.getElementById("entryUsername").value = "";
+      document.getElementById("password").value = "";
+    }
+
+    function loadEntries() {
+      const container = document.getElementById("entries");
+      container.innerHTML = "";
+      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
+
+      entries.forEach((entry, index) => {
+        const passwordId = `pass-${index}`;
+
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <strong>🔗 ${entry.website}</strong><br/>
+          👤 ${entry.username}<br/>
+          <input type="password" id="${passwordId}" value="${entry.password}" readonly />
+          <button class="inline-btn" onclick="togglePasswordVisibility('${passwordId}')">👁</button>
+          <button class="inline-btn" onclick="deleteEntry(${index})">🗑 Delete</button>
+        `;
+
+        container.appendChild(div);
+      });
+    }
+
+    function deleteEntry(index) {
+      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
+      entries.splice(index, 1);
+      localStorage.setItem("passwords", JSON.stringify(entries));
+      loadEntries();
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Retro Password Manager</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+    body {
+      font-family: 'VT323', monospace;
       background-color: #1e1e1e;
       color: #33ff00;
       padding: 30px;
@@ -192,3 +407,4 @@
   </script>
 </body>
 </html>
+ -->
