@@ -3,6 +3,207 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Retro Password Manager</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+    body {
+      font-family: 'VT323', monospace;
+      background-color: #1e1e1e;
+      color: #33ff00;
+      padding: 30px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    h1, h2, h3 {
+      border-bottom: 1px dashed #33ff00;
+      padding-bottom: 5px;
+    }
+
+    input, button {
+      font-family: 'VT323', monospace;
+      font-size: 20px;
+      background-color: #000;
+      color: #33ff00;
+      border: 1px solid #33ff00;
+      padding: 8px;
+      margin: 10px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    button:hover {
+      background-color: #33ff00;
+      color: #000;
+    }
+
+    .entry {
+      border: 1px dashed #33ff00;
+      padding: 10px;
+      margin: 10px 0;
+      background-color: #000;
+    }
+
+    .inline-btn {
+      display: inline-block;
+      width: auto;
+      margin-left: 5px;
+      font-size: 16px;
+      padding: 4px 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔐 My Retro Password Log</h1>
+
+  <div id="setup" style="display: none;">
+    <h2>Set Your Master Password</h2>
+    <input type="password" id="newPassword" placeholder="Create a password" />
+    <input type="password" id="confirmPassword" placeholder="Confirm password" />
+    <button onclick="createAccount()">Set Password</button>
+  </div>
+
+  <div id="login" style="display: none;">
+    <h2>Login</h2>
+    <input type="password" id="loginPassword" placeholder="Enter your password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="app" style="display: none;">
+    <h2>Welcome back, User</h2>
+
+    <h3>Add New Entry</h3>
+    <input type="text" id="website" placeholder="Website" />
+    <input type="text" id="username" placeholder="Username" />
+    <div>
+      <input type="password" id="password" placeholder="Password" />
+      <button class="inline-btn" onclick="togglePasswordVisibility('password')">👁 Show/Hide</button>
+    </div>
+    <button onclick="addEntry()">💾 Save Entry</button>
+
+    <h3>Saved Entries</h3>
+    <div id="entries"></div>
+
+    <button onclick="logout()">🚪 Logout</button>
+  </div>
+
+  <script>
+    const storedPass = localStorage.getItem("masterPassword");
+
+    if (!storedPass) {
+      document.getElementById("setup").style.display = "block";
+    } else if (sessionStorage.getItem("loggedIn")) {
+      showApp();
+    } else {
+      document.getElementById("login").style.display = "block";
+    }
+
+    function createAccount() {
+      const pass = document.getElementById("newPassword").value;
+      const confirm = document.getElementById("confirmPassword").value;
+
+      if (!pass || pass !== confirm) {
+        alert("Passwords do not match or are empty.");
+        return;
+      }
+
+      localStorage.setItem("masterPassword", pass);
+      sessionStorage.setItem("loggedIn", true);
+      showApp();
+    }
+
+    function login() {
+      const input = document.getElementById("loginPassword").value;
+      if (input === localStorage.getItem("masterPassword")) {
+        sessionStorage.setItem("loggedIn", true);
+        showApp();
+      } else {
+        alert("Wrong password.");
+      }
+    }
+
+    function logout() {
+      sessionStorage.removeItem("loggedIn");
+      location.reload();
+    }
+
+    function showApp() {
+      document.getElementById("setup").style.display = "none";
+      document.getElementById("login").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      loadEntries();
+    }
+
+    function togglePasswordVisibility(id) {
+      const input = document.getElementById(id);
+      input.type = input.type === "password" ? "text" : "password";
+    }
+
+    function addEntry() {
+      const website = document.getElementById("website").value;
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      if (!website || !username || !password) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      const entry = { website, username, password };
+      const existing = JSON.parse(localStorage.getItem("passwords") || "[]");
+      existing.push(entry);
+      localStorage.setItem("passwords", JSON.stringify(existing));
+      loadEntries();
+
+      document.getElementById("website").value = "";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
+
+    function loadEntries() {
+      const container = document.getElementById("entries");
+      container.innerHTML = "";
+      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
+
+      entries.forEach((entry, index) => {
+        const passwordId = `pass-${index}`;
+
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <strong>🔗 ${entry.website}</strong><br/>
+          👤 ${entry.username}<br/>
+          <input type="password" id="${passwordId}" value="${entry.password}" readonly />
+          <button class="inline-btn" onclick="togglePasswordVisibility('${passwordId}')">👁</button>
+          <button class="inline-btn" onclick="deleteEntry(${index})">🗑 Delete</button>
+        `;
+
+        container.appendChild(div);
+      });
+    }
+
+    function deleteEntry(index) {
+      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
+      entries.splice(index, 1);
+      localStorage.setItem("passwords", JSON.stringify(entries));
+      loadEntries();
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Password Manager</title>
   <style>
     body {
@@ -111,170 +312,6 @@
       document.getElementById("auth").style.display = "none";
       document.getElementById("app").style.display = "block";
       document.getElementById("welcome").innerText = `Welcome, ${userName}`;
-      loadEntries();
-    }
-
-    function togglePasswordVisibility(inputId) {
-      const input = document.getElementById(inputId);
-      input.type = input.type === "password" ? "text" : "password";
-    }
-
-    function addEntry() {
-      const website = document.getElementById("website").value;
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-
-      if (!website || !username || !password) {
-        alert("Please fill all fields.");
-        return;
-      }
-
-      const entry = { website, username, password };
-      const existing = JSON.parse(localStorage.getItem("passwords") || "[]");
-      existing.push(entry);
-      localStorage.setItem("passwords", JSON.stringify(existing));
-      loadEntries();
-
-      document.getElementById("website").value = "";
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
-    }
-
-    function loadEntries() {
-      const container = document.getElementById("entries");
-      container.innerHTML = "";
-      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
-
-      entries.forEach((entry, index) => {
-        const div = document.createElement("div");
-        div.className = "entry";
-
-        const passwordId = `entry-password-${index}`;
-
-        div.innerHTML = `
-          <strong>${entry.website}</strong><br />
-          Username: ${entry.username}<br />
-          <input type="password" id="${passwordId}" value="${entry.password}" readonly style="width: 100%;" />
-          <button class="inline-btn password-toggle" onclick="togglePasswordVisibility('${passwordId}')">Show/Hide</button>
-          <button class="inline-btn" onclick="deleteEntry(${index})">Delete</button>
-        `;
-
-        container.appendChild(div);
-      });
-    }
-
-    function deleteEntry(index) {
-      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
-      entries.splice(index, 1);
-      localStorage.setItem("passwords", JSON.stringify(entries));
-      loadEntries();
-    }
-  </script>
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Password Manager</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #111;
-      color: #f0f0f0;
-      max-width: 600px;
-      margin: 30px auto;
-    }
-    input, button {
-      display: block;
-      margin: 10px 0;
-      padding: 10px;
-      width: 100%;
-    }
-    .entry {
-      border: 1px solid #444;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
-      background-color: #222;
-    }
-    .password-toggle {
-      margin-top: 5px;
-      background-color: #333;
-      color: white;
-      cursor: pointer;
-    }
-    .inline-btn {
-      display: inline-block;
-      width: auto;
-      margin-left: 10px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Password Manager</h1>
-
-  <div id="auth">
-    <input type="password" id="masterPasswordInput" placeholder="Enter master password" />
-    <button onclick="login()">Login</button>
-    <button onclick="createAccount()">Create New Account</button>
-  </div>
-
-  <div id="app" style="display: none;">
-    <h2>Add New Entry</h2>
-    <input type="text" id="website" placeholder="Website" />
-    <input type="text" id="username" placeholder="Username" />
-    <div style="position: relative;">
-      <input type="password" id="password" placeholder="Password" />
-      <button class="password-toggle" onclick="togglePasswordVisibility('password')">Show/Hide Password</button>
-    </div>
-    <button onclick="addEntry()">Add Entry</button>
-
-    <h2>Saved Entries</h2>
-    <div id="entries"></div>
-  </div>
-
-  <script>
-    function login() {
-      const input = document.getElementById("masterPasswordInput").value;
-      if (input === localStorage.getItem("masterPassword")) {
-        showApp();
-      } else {
-        alert("Incorrect master password.");
-      }
-    }
-
-    function createAccount() {
-      const input = document.getElementById("masterPasswordInput").value;
-      if (!input) {
-        alert("Please enter a password to create an account.");
-        return;
-      }
-      if (localStorage.getItem("masterPassword")) {
-        alert("An account already exists. Only one user allowed.");
-        return;
-      }
-      localStorage.setItem("masterPassword", input);
-      alert("Account created successfully. Remember your password!");
-      showApp();
-    }
-
-    function showApp() {
-      document.getElementById("auth").style.display = "none";
-      document.getElementById("app").style.display = "block";
       loadEntries();
     }
 
