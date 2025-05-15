@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Password Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #f0f0f0;
+      max-width: 600px;
+      margin: 30px auto;
+    }
+    input, button {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+    }
+    .entry {
+      border: 1px solid #444;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      background-color: #222;
+    }
+  </style>
+</head>
+<body>
+  <h1>Password Manager</h1>
+
+  <div id="auth">
+    <input type="password" id="masterPasswordInput" placeholder="Enter master password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div id="app" style="display: none;">
+    <h2>Add New Entry</h2>
+    <input type="text" id="website" placeholder="Website" />
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="addEntry()">Add Entry</button>
+
+    <h2>Saved Entries</h2>
+    <div id="entries"></div>
+  </div>
+
+  <script>
+    const storedMaster = localStorage.getItem("masterPassword") || null;
+
+    function login() {
+      const input = document.getElementById("masterPasswordInput").value;
+      if (!storedMaster) {
+        localStorage.setItem("masterPassword", input);
+        alert("Master password set. Remember it!");
+        showApp();
+      } else if (input === storedMaster) {
+        showApp();
+      } else {
+        alert("Incorrect master password.");
+      }
+    }
+
+    function showApp() {
+      document.getElementById("auth").style.display = "none";
+      document.getElementById("app").style.display = "block";
+      loadEntries();
+    }
+
+    function addEntry() {
+      const website = document.getElementById("website").value;
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      const entry = { website, username, password };
+      const existing = JSON.parse(localStorage.getItem("passwords") || "[]");
+      existing.push(entry);
+      localStorage.setItem("passwords", JSON.stringify(existing));
+      loadEntries();
+      document.getElementById("website").value = "";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
+
+    function loadEntries() {
+      const container = document.getElementById("entries");
+      container.innerHTML = "";
+      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
+
+      entries.forEach((entry, index) => {
+        const div = document.createElement("div");
+        div.className = "entry";
+        div.innerHTML = `
+          <strong>${entry.website}</strong><br />
+          Username: ${entry.username}<br />
+          Password: ${entry.password}<br />
+          <button onclick="deleteEntry(${index})">Delete</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function deleteEntry(index) {
+      const entries = JSON.parse(localStorage.getItem("passwords") || "[]");
+      entries.splice(index, 1);
+      localStorage.setItem("passwords", JSON.stringify(entries));
+      loadEntries();
+    }
+  </script>
+</body>
+</html>
